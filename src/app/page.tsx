@@ -1,9 +1,16 @@
-import { Button } from 'antd'
+import { GithubOutlined } from "@ant-design/icons";
+import { Button, Flex } from "antd";
 
 export default function Home() {
   return (
-    <div>
-            <Button type="primary">Github</Button>
-        </div>
-  )
+    <Flex align="center" justify="center"  style={{height:"100vh"}}>
+      <Button
+        href={`https://github.com/apps/replicate-integrator/installations/new`}
+        type="primary"
+      >
+        <GithubOutlined />
+        Github
+      </Button>
+    </Flex>
+  );
 }

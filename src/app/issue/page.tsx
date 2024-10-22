@@ -13,15 +13,12 @@ type FieldType = {
   repo: string;
 };
 
-
-
 const IssuePage = () => {
   const [repo, setRepo] = useState([]);
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
   const queryId = searchParams.get("id");
-  
-  
+
   useEffect(() => {
     if (queryId) {
       // If id is in the query parameters, store it in localStorage
@@ -32,12 +29,10 @@ const IssuePage = () => {
   const integrationId = queryId || localStorage.getItem("integrationId");
 
   useEffect(() => {
-    
     const fetchData = async () => {
       try {
-        
         const response = await axios.get(
-          `http://localhost:5000/issue/${integrationId}/repo`
+          `https://replicate-integrator-server.vercel.app/issue/${integrationId}/repo`
         );
         setRepo(response.data.data);
         setLoading(false);
@@ -55,34 +50,54 @@ const IssuePage = () => {
     label: item,
   }));
 
-
-
   //form submit actions
-  const onFinish: FormProps<FieldType>["onFinish"] = async(values) => {
+  const onFinish: FormProps<FieldType>["onFinish"] = async (values) => {
     console.log("Success:", values);
     const issueData = {
       integrationId,
       ...values,
-    }
+    };
     try {
-      const response = await axios.post('http://localhost:5000/issue/create', issueData);
+      const response = await axios.post(
+        "https://replicate-integrator-server.vercel.app/issue/create",
+        issueData
+      );
       console.log(response);
-      
+
       if (response.status === HttpStatusCode.Created) {
-        alert('success')
-      }
-      else {
-        alert("failed")
+        alert("success");
+      } else {
+        alert("failed");
       }
     } catch (error) {
       console.log("Failed to create issue:", error);
-      
     }
   };
-  
-  const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (errorInfo) => {
+
+  const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (
+    errorInfo
+  ) => {
     console.log("Failed:", errorInfo);
   };
+
+
+  //handle disconnect integration event
+  const handleDisconnect = async() => {
+    try {
+      const response = await axios.delete(
+        `https://replicate-integrator-server.vercel.app/integrate/github/${integrationId}`
+      );
+      console.log(response);
+
+      if (response.status === HttpStatusCode.Ok) {
+        alert("success");
+      } else {
+        alert("failed");
+      }
+    } catch (error) {
+      console.log("Failed to disconnect issue:", error);
+    }
+  }
 
   return loading ? (
     <Flex
@@ -93,53 +108,56 @@ const IssuePage = () => {
       <Spin />
     </Flex>
   ) : (
-    <Flex
-      justify="center"
-      align="center"
-      style={{ height: "100vh", width: "100vw" }}
-    >
-      <Form
-        name="basic"
-        labelCol={{ span: 8 }}
-        wrapperCol={{ span: 16 }}
-        style={{ minWidth: 500 }}
-        initialValues={{ remember: true }}
-        onFinish={onFinish}
-        onFinishFailed={onFinishFailed}
-        autoComplete="off"
+
+      <Flex
+        justify="center"
+        align="center"
+        style={{ height: "90vh", width: "90vw" }}
+        vertical
       >
-        <Form.Item<FieldType>
-          label="Repository"
-          name="repo"
-          rules={[
-            { required: true, message: "Please select your repository!" },
-          ]}
+        <Form
+          name="basic"
+          labelCol={{ span: 8 }}
+          wrapperCol={{ span: 16 }}
+          style={{ minWidth: 500 }}
+          initialValues={{ remember: true }}
+          onFinish={onFinish}
+          onFinishFailed={onFinishFailed}
+          autoComplete="off"
         >
-          <Select options={repoList} />
-        </Form.Item>
-        <Form.Item<FieldType>
-          label="Title"
-          name="title"
-          rules={[{ required: true, message: "Please input your title!" }]}
-        >
-          <Input />
-        </Form.Item>
+          <Form.Item<FieldType>
+            label="Repository"
+            name="repo"
+            rules={[
+              { required: true, message: "Please select your repository!" },
+            ]}
+          >
+            <Select options={repoList} />
+          </Form.Item>
+          <Form.Item<FieldType>
+            label="Title"
+            name="title"
+            rules={[{ required: true, message: "Please input your title!" }]}
+          >
+            <Input />
+          </Form.Item>
 
-        <Form.Item<FieldType>
-          label="Message"
-          name="message"
-          rules={[{ required: true, message: "Please input your message!" }]}
-        >
-          <TextArea rows={4} />
-        </Form.Item>
+          <Form.Item<FieldType>
+            label="Message"
+            name="message"
+            rules={[{ required: true, message: "Please input your message!" }]}
+          >
+            <TextArea rows={4} />
+          </Form.Item>
 
-        <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-          <Button type="primary" htmlType="submit">
-            Submit
-          </Button>
-        </Form.Item>
-      </Form>
-    </Flex>
+          <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+            <Button type="primary" htmlType="submit">
+              Submit
+            </Button>
+          </Form.Item>
+        </Form>
+        <Button onClick={handleDisconnect} type="default">Disconnect integration</Button>
+      </Flex>
   );
 };
 
